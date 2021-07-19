@@ -13,6 +13,13 @@ object webServer {
     implicit  val materializer =ActorMaterializer
     implicit val executionContext = system.dispatcher
     //path =>http://localhost:8080/
+   lazy  val routes={
+      pathPrefix("api"){
+        get{
+          complete("Hello world")
+        }
+      }
+    }
     lazy val route =
       get {
         pathSingleSlash{
@@ -47,7 +54,7 @@ object webServer {
         complete("RECEIVED Somethingelse")
 
     //route will be implicitly converted to 'flow' using routeresulr.route2Handerflow'
-    val bindingFuture =Http().bindAndHandle(route3,"Localhost",8080)
+    val bindingFuture =Http().bindAndHandle(routes,"Localhost",8080)
 
     println(s"server online at http://localhost:8080/\nPress RETURN to Stop...")
     StdIn.readLine()// it will run until user presses return
