@@ -12,7 +12,10 @@ libraryDependencies ++= Seq(
   "org.mongodb.scala" %% "mongo-scala-driver" % "4.1.1",
   "org.slf4j" % "slf4j-simple" % "1.6.4"
 
+
 )
+val AkkaHttpVersion = "10.2.4"
+libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion
 
 
 //libraryDependencies ++= Seq(

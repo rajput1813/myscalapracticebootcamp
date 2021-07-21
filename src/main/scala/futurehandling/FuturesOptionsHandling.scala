@@ -3,6 +3,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
 
 object FuturesOptionsHandling extends App {
   //Hint - Try map/for-comprehension on Futures.
@@ -53,16 +54,28 @@ object FuturesOptionsHandling extends App {
   //Await.result(jobsGroupedByTitle,200.seconds)
 
   println(jobsGroupedByTitle)
-  //      // Should return Map(title -> (sumClicks, sumApplies)). if clicks/applies is None, set its value as 0
-  //     val statsPerTitle =   Future{
-  //       val myMap :Future[Map[String ,List[Job] ]] = updatedJobs.map(x=> x.groupBy(x=>x.title))
-  //       val myMap1 :Future[Map[String ,Int]] = myMap.map(x=> x.values.foreach(y=> y.foreach(z=> z.clicks.getOrElse(0)))).to
-  //
-  //
-  //       myMap
-  //     }
-  //}
+  // Should return Map(title -> (sumClicks, sumApplies)). if clicks/applies is None, set its value as 0
+  var statsPerTitle :Map[String, List[Int]] = Map.empty[String, List[Int]]
+    updatedJobs.onComplete {
+    case Success(value) => {
+      var myMap: Map[String, List[Int]] = Map.empty[String, List[Int]]
+      for (i <- value) {
+        var curr: List[Int] = List.empty[Int]
 
+        curr = curr :+ i.clicks.getOrElse(0)
+        curr = curr :+ i.applies.getOrElse(0)
+        myMap = myMap + (i.title -> curr)
+      }
+      statsPerTitle = myMap
+
+    }
+
+    case Failure(exception) => println(s"$exception")
+
+
+  }
+  Thread.sleep(500)
+    println(statsPerTitle)
 
   //      case class Job(jobId: String, title: String, clicks: Option[Int] = None, applies: Option[Int] = None)
   //      case class ClicksStat(jobId: String, clicks: Int)
