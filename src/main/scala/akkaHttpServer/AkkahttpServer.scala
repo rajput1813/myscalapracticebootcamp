@@ -1,5 +1,5 @@
 package akkaHttpServer
-import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpEntity, HttpMethod, HttpMethods}
+import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpEntity, HttpMethod, HttpMethods, StatusCodes}
 import akka.actor.ActorSystem
 import akka.actor.Status.{Failure, Success}
 import akka.http.scaladsl.Http
@@ -10,14 +10,36 @@ import akka.stream.ActorMaterializer
 import spray.json.DefaultJsonProtocol
 import spray.json._
 import com.fasterxml.jackson.core.PrettyPrinter
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.StdIn
-//trait  JsonSupport extends SprayJsonSupport with DefaultJsonProtocol{
-//  import spray.json._
-//  implicit  val printer =PrettyPrinter
-//  implicit val serverFormat= jsonFormat2(AkkaHttpRestServer)
-//}
+
+
+class DonutRoutes extends JsonSupport{
+  def route():Route ={
+    val donutDao =new DonutDao()
+    path("create-donut"){
+      post{
+        entity(as[Donut]){ donut=>
+          complete(StatusCodes.Created,s"Created donut = $donut")
+
+        }
+      }~ delete{
+        complete(StatusCodes.MethodNotAllowed,"HTTP Delete operation is not allowed for the create-donut-path.")
+      }
+
+    }~ path("donuts"){
+      get {
+        onSuccess(donutDao.fetchDonuts()){ donuts =>
+          complete(StatusCodes.OK,donuts)
+        }
+      }
+
+    }
+  }
+
+}
 class ServerVersion extends JsonSupport {
   def route():Route ={
     path("server-version"){
@@ -74,7 +96,9 @@ val serverUpRoute:Route = get{
   val serverVersionRoute = serverVersion.route()
   val serverVersionRouteAsJson =serverVersion.routeAsJson()
   val serverVersionJsonEncoding = serverVersion.routeAsJsonEncoding()
-  val routes: Route = serverVersionRoute  ~serverVersionRouteAsJson ~ serverVersionJsonEncoding~serverUpRoute
+  val donutRoutes = new DonutRoutes().route();
+
+  val routes: Route =donutRoutes~ serverVersionRoute  ~serverVersionRouteAsJson ~ serverVersionJsonEncoding~serverUpRoute
 
   val httpServerFuture =Http().bindAndHandle(routes,host,port)
 //  httpServerFuture.onComplete{
